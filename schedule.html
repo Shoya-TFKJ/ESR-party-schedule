@@ -437,6 +437,76 @@
             width: 0%;
         }
 
+        /* 保存ステータス */
+        .save-status {
+            text-align: center;
+            font-size: 11px;
+            letter-spacing: 2px;
+            height: 18px;
+            margin-bottom: 12px;
+            transition: opacity 0.5s;
+        }
+
+        .save-status.ok    { color: var(--accent); }
+        .save-status.error { color: #f48fb1; }
+
+        /* モーダル */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.open { display: flex; }
+
+        .modal {
+            background: var(--surface);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            padding: 32px;
+            width: 420px;
+            max-width: 90vw;
+        }
+
+        .modal h2 {
+            font-size: 13px;
+            letter-spacing: 3px;
+            color: var(--accent);
+            margin-bottom: 16px;
+            font-weight: 400;
+        }
+
+        .modal p {
+            font-size: 11px;
+            color: var(--muted);
+            line-height: 1.8;
+            margin-bottom: 16px;
+        }
+
+        .modal input {
+            width: 100%;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text);
+            font-size: 12px;
+            padding: 10px 12px;
+            outline: none;
+            margin-bottom: 16px;
+        }
+
+        .modal input:focus { border-color: var(--accent); }
+
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
         .venue-wrap {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -497,9 +567,12 @@
     </div>
 
     <div class="actions">
-        <button class="btn primary" onclick="window.print()">印刷</button>
+        <button class="btn primary" id="save-btn" onclick="cloudSave()">保存</button>
+        <button class="btn" onclick="window.print()">印刷</button>
         <button class="btn" onclick="resetAll()">リセット</button>
+        <button class="btn" onclick="showTokenModal()">⚙ 接続設定</button>
     </div>
+    <div id="save-status" class="save-status"></div>
 
     <div class="col-headers">
         <div class="col-header"></div>
@@ -538,6 +611,20 @@
     </div>
     <div class="venue-wrap">
         <img src="venue-layout.png" alt="会場レイアウト" class="venue-img" />
+    </div>
+</div>
+
+<!-- トークン入力モーダル -->
+<div class="modal-overlay" id="token-modal">
+    <div class="modal">
+        <h2>GITHUB 接続設定</h2>
+        <p>GitHubの Personal Access Token を入力してください。<br>
+        トークンはお使いのブラウザにのみ保存され、外部には送信されません。</p>
+        <input id="token-input" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
+        <div class="modal-actions">
+            <button class="btn" onclick="closeTokenModal()">キャンセル</button>
+            <button class="btn primary" onclick="saveToken()">保存</button>
+        </div>
     </div>
 </div>
 
@@ -723,6 +810,108 @@ function renderMenu() {
 }
 
 renderMenu();
+
+// ── GitHub クラウド保存 ──
+const REPO  = 'Shoya-TFKJ/ESR-party-schedule';
+const DFILE = 'data.json';
+
+function getToken() { return localStorage.getItem('gh_token') || ''; }
+
+function showStatus(msg, type) {
+    const el = document.getElementById('save-status');
+    el.textContent = msg;
+    el.className = 'save-status ' + type;
+    setTimeout(() => { el.textContent = ''; el.className = 'save-status'; }, 3000);
+}
+
+function encodeData(data) {
+    const str = JSON.stringify(data);
+    const bytes = new TextEncoder().encode(str);
+    let bin = '';
+    bytes.forEach(b => bin += String.fromCharCode(b));
+    return btoa(bin);
+}
+
+function decodeData(b64) {
+    const bin = atob(b64.replace(/\n/g, ''));
+    const bytes = new Uint8Array(bin.length).map((_, i) => bin.charCodeAt(i));
+    return JSON.parse(new TextDecoder().decode(bytes));
+}
+
+async function cloudLoad() {
+    try {
+        const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${DFILE}`, {
+            headers: getToken() ? { Authorization: `token ${getToken()}` } : {}
+        });
+        if (!res.ok) return;
+        const json = await res.json();
+        const data = decodeData(json.content);
+        if (data.state)     state     = data.state;
+        if (data.menuState) menuState = data.menuState;
+        render();
+        renderMenu();
+    } catch(e) {}
+}
+
+async function cloudSave() {
+    const token = getToken();
+    if (!token) { showTokenModal(); return; }
+
+    const btn = document.getElementById('save-btn');
+    btn.textContent = '保存中...';
+    btn.disabled = true;
+
+    try {
+        // 現在のSHAを取得
+        let sha = null;
+        const cur = await fetch(`https://api.github.com/repos/${REPO}/contents/${DFILE}`, {
+            headers: { Authorization: `token ${token}` }
+        });
+        if (cur.ok) sha = (await cur.json()).sha;
+
+        // データをプッシュ
+        const body = { message: 'スケジュールデータを更新', content: encodeData({ state, menuState }) };
+        if (sha) body.sha = sha;
+
+        const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${DFILE}`, {
+            method: 'PUT',
+            headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+
+        if (res.ok) {
+            showStatus('✓ 保存しました', 'ok');
+        } else {
+            showStatus('保存に失敗しました', 'error');
+        }
+    } catch(e) {
+        showStatus('保存に失敗しました', 'error');
+    }
+
+    btn.textContent = '保存';
+    btn.disabled = false;
+}
+
+function showTokenModal() {
+    document.getElementById('token-input').value = getToken();
+    document.getElementById('token-modal').classList.add('open');
+}
+
+function closeTokenModal() {
+    document.getElementById('token-modal').classList.remove('open');
+}
+
+function saveToken() {
+    const t = document.getElementById('token-input').value.trim();
+    if (t) {
+        localStorage.setItem('gh_token', t);
+        closeTokenModal();
+        showStatus('✓ トークンを設定しました', 'ok');
+    }
+}
+
+// 起動時にクラウドからデータを読み込む
+cloudLoad();
 
 </script>
 </body>
