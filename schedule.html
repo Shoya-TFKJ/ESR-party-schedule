@@ -600,7 +600,6 @@
     <div class="actions">
         <button class="btn" onclick="window.print()">印刷</button>
         <button class="btn" onclick="resetAll()">リセット</button>
-        <button class="btn" onclick="showTokenModal()">⚙ 接続設定</button>
     </div>
     <div id="save-status" class="save-status"></div>
 
@@ -647,19 +646,6 @@
 <!-- 固定保存ボタン -->
 <button class="fab-save" id="fab-save-btn" onclick="cloudSave()">保存</button>
 
-<!-- トークン入力モーダル -->
-<div class="modal-overlay" id="token-modal">
-    <div class="modal">
-        <h2>GITHUB 接続設定</h2>
-        <p>GitHubの Personal Access Token を入力してください。<br>
-        トークンはお使いのブラウザにのみ保存され、外部には送信されません。</p>
-        <input id="token-input" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
-        <div class="modal-actions">
-            <button class="btn" onclick="closeTokenModal()">キャンセル</button>
-            <button class="btn primary" onclick="saveToken()">保存</button>
-        </div>
-    </div>
-</div>
 
 <footer>ESR PARTY 2025 &mdash; SHOOTING SCHEDULE</footer>
 
@@ -844,12 +830,7 @@ function renderMenu() {
 
 renderMenu();
 
-// ── GitHub クラウド保存 ──
-const REPO  = 'Shoya-TFKJ/ESR-party-schedule';
-const DFILE = 'data.json';
-
-function getToken() { return localStorage.getItem('gh_token') || ''; }
-
+// ── ブラウザ保存 ──
 function showStatus(msg, type) {
     const el = document.getElementById('save-status');
     el.textContent = msg;
@@ -857,95 +838,18 @@ function showStatus(msg, type) {
     setTimeout(() => { el.textContent = ''; el.className = 'save-status'; }, 3000);
 }
 
-function encodeData(data) {
-    const str = JSON.stringify(data);
-    const bytes = new TextEncoder().encode(str);
-    let bin = '';
-    bytes.forEach(b => bin += String.fromCharCode(b));
-    return btoa(bin);
-}
-
-function decodeData(b64) {
-    const bin = atob(b64.replace(/\n/g, ''));
-    const bytes = new Uint8Array(bin.length).map((_, i) => bin.charCodeAt(i));
-    return JSON.parse(new TextDecoder().decode(bytes));
-}
-
-async function cloudLoad() {
-    try {
-        const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${DFILE}`, {
-            headers: getToken() ? { Authorization: `token ${getToken()}` } : {}
-        });
-        if (!res.ok) return;
-        const json = await res.json();
-        const data = decodeData(json.content);
-        if (data.state)     state     = data.state;
-        if (data.menuState) menuState = data.menuState;
-        render();
-        renderMenu();
-    } catch(e) {}
-}
-
-async function cloudSave() {
-    const token = getToken();
-    if (!token) { showTokenModal(); return; }
-
+function cloudSave() {
+    localStorage.setItem('esr_state', JSON.stringify(state));
+    localStorage.setItem('esr_menu', JSON.stringify(menuState));
     const btn = document.getElementById('fab-save-btn');
-    btn.textContent = '保存中...';
-    btn.disabled = true;
-
-    try {
-        // 現在のSHAを取得
-        let sha = null;
-        const cur = await fetch(`https://api.github.com/repos/${REPO}/contents/${DFILE}`, {
-            headers: { Authorization: `token ${token}` }
-        });
-        if (cur.ok) sha = (await cur.json()).sha;
-
-        // データをプッシュ
-        const body = { message: 'スケジュールデータを更新', content: encodeData({ state, menuState }) };
-        if (sha) body.sha = sha;
-
-        const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${DFILE}`, {
-            method: 'PUT',
-            headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
-
-        if (res.ok) {
-            showStatus('✓ 保存しました', 'ok');
-        } else {
-            showStatus('保存に失敗しました', 'error');
-        }
-    } catch(e) {
-        showStatus('保存に失敗しました', 'error');
-    }
-
-    btn.textContent = '保存';
-    btn.disabled = false;
-    btn.style.background = '';
+    btn.textContent = '✓ 保存済み';
+    showStatus('✓ ブラウザに保存しました', 'ok');
+    setTimeout(() => { btn.textContent = '保存'; }, 2000);
 }
 
-function showTokenModal() {
-    document.getElementById('token-input').value = getToken();
-    document.getElementById('token-modal').classList.add('open');
-}
-
-function closeTokenModal() {
-    document.getElementById('token-modal').classList.remove('open');
-}
-
-function saveToken() {
-    const t = document.getElementById('token-input').value.trim();
-    if (t) {
-        localStorage.setItem('gh_token', t);
-        closeTokenModal();
-        showStatus('✓ トークンを設定しました', 'ok');
-    }
-}
-
-// 起動時にクラウドからデータを読み込む
-cloudLoad();
+function showTokenModal() {}
+function closeTokenModal() {}
+function saveToken() {}
 
 </script>
 </body>
