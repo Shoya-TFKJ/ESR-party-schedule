@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESR 企業パーティー 撮影スケジュール</title>
+    <style>
+        :root {
+            --bg: #0d0d1a;
+            --surface: #1a1a2e;
+            --surface2: #16213e;
+            --accent: #c9a84c;
+            --ejima: #4fc3f7;
+            --ichiyama: #f48fb1;
+            --text: #e0e0e0;
+            --muted: #666;
+            --border: #2a2a4a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Sans', sans-serif;
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(180deg, #1a1a2e 0%, #0d0d1a 100%);
+            border-bottom: 1px solid var(--accent);
+            padding: 28px 40px;
+            text-align: center;
+        }
+
+        .header-date {
+            color: var(--accent);
+            font-size: 11px;
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+        }
+
+        .header-logo {
+            height: 56px;
+            width: auto;
+            margin-bottom: 14px;
+            object-fit: contain;
+        }
+
+        header h1 {
+            font-size: 22px;
+            font-weight: 300;
+            letter-spacing: 6px;
+            color: #fff;
+        }
+
+        .header-sub {
+            margin-top: 8px;
+            font-size: 11px;
+            letter-spacing: 3px;
+            color: var(--muted);
+        }
+
+        .header-stats {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 32px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: var(--muted);
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 26px;
+            font-weight: 200;
+            letter-spacing: 2px;
+            color: var(--accent);
+        }
+
+        .stat-unit {
+            font-size: 12px;
+            margin-left: 2px;
+            color: var(--muted);
+        }
+
+        .stat-divider {
+            width: 1px;
+            height: 36px;
+            background: var(--border);
+        }
+
+        .container {
+            max-width: 860px;
+            margin: 36px auto;
+            padding: 0 20px;
+        }
+
+        /* 凡例 */
+        .legend {
+            display: flex;
+            gap: 28px;
+            justify-content: center;
+            margin-bottom: 28px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            letter-spacing: 2px;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .legend-input {
+            background: transparent;
+            border: none;
+            border-bottom: 1px dashed var(--border);
+            color: var(--muted);
+            font-size: 12px;
+            letter-spacing: 2px;
+            width: 100px;
+            outline: none;
+            padding: 2px 0;
+            transition: border-color 0.2s;
+        }
+
+        .legend-input::placeholder { color: #444; }
+        .legend-input:focus { border-bottom-color: var(--accent); color: var(--text); }
+
+        /* アクションボタン */
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+
+        .btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            padding: 7px 20px;
+            border-radius: 3px;
+            font-size: 11px;
+            cursor: pointer;
+            letter-spacing: 2px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover { border-color: var(--accent); color: var(--accent); }
+        .btn.primary { border-color: var(--accent); color: var(--accent); }
+
+        /* カラムヘッダー */
+        .col-headers {
+            display: grid;
+            grid-template-columns: 72px 1fr 110px 110px;
+            gap: 6px;
+            margin-bottom: 8px;
+            padding-left: 4px;
+        }
+
+        .col-header {
+            text-align: center;
+            font-size: 10px;
+            letter-spacing: 3px;
+            color: var(--muted);
+            padding: 6px 0;
+        }
+
+        .col-header.ejima { color: var(--ejima); }
+        .col-header.ichiyama { color: var(--ichiyama); }
+
+        /* セクション区切り */
+        .section-divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 18px 0 10px;
+        }
+
+        .section-divider::before,
+        .section-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .section-label {
+            font-size: 10px;
+            color: var(--accent);
+            letter-spacing: 4px;
+        }
+
+        /* イベント行 */
+        .event-row {
+            display: grid;
+            grid-template-columns: 72px 1fr 110px 110px;
+            gap: 6px;
+            margin-bottom: 2px;
+            align-items: stretch;
+        }
+
+        .time-cell {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 12px;
+            font-size: 12px;
+            color: var(--accent);
+            font-weight: 500;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        .event-cell {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: 11px 14px;
+        }
+
+        .event-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: #fff;
+        }
+
+        .event-input {
+            background: transparent;
+            border: none;
+            border-bottom: 1px dashed var(--border);
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 500;
+            width: 100%;
+            outline: none;
+            padding: 2px 0;
+            transition: border-color 0.2s;
+        }
+
+        .event-input::placeholder { color: #444; font-weight: 400; }
+        .event-input:focus { border-bottom-color: var(--accent); }
+
+        /* 担当セル */
+        .assignment-cell {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: 8px 10px;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+        }
+
+        .task-input {
+            background: transparent;
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 12px;
+            line-height: 1.5;
+            resize: none;
+            padding: 0;
+        }
+
+        .task-input.ichiyama-input { color: var(--ichiyama); }
+        .task-input.ichiyama-input::placeholder { color: rgba(244,143,177,0.3); }
+
+        .task-input.ejima-input { color: var(--ejima); }
+        .task-input.ejima-input::placeholder { color: rgba(79,195,247,0.3); }
+
+        /* メモ行 */
+        .note-row {
+            display: grid;
+            grid-template-columns: 72px 1fr 110px 110px;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .note-input {
+            grid-column: 2 / 5;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid #222;
+            color: var(--muted);
+            font-size: 11px;
+            padding: 4px 8px;
+            outline: none;
+            width: 100%;
+            transition: border-color 0.2s;
+        }
+
+        .note-input::placeholder { color: #333; }
+        .note-input:focus { border-bottom-color: #ff8c00; }
+        .note-input { color: #ff8c00; }
+
+        footer {
+            text-align: center;
+            padding: 36px;
+            font-size: 10px;
+            letter-spacing: 3px;
+            color: #333;
+        }
+
+        /* メニューチェックリスト */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 6px;
+            margin-bottom: 20px;
+        }
+
+        .menu-col-headers {
+            display: grid;
+            grid-template-columns: 1fr 64px 64px;
+            gap: 8px;
+            padding: 0 12px 6px;
+        }
+
+        .menu-col-h {
+            text-align: center;
+            font-size: 10px;
+            letter-spacing: 2px;
+        }
+
+        .menu-col-h.ichiyama { color: var(--ichiyama); }
+        .menu-col-h.ejima    { color: var(--ejima); }
+
+        .menu-category {
+            font-size: 10px;
+            letter-spacing: 3px;
+            color: var(--accent);
+            padding: 14px 0 6px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 2px;
+        }
+
+        .menu-item {
+            display: grid;
+            grid-template-columns: 1fr 64px 64px;
+            align-items: center;
+            gap: 8px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: 10px 12px;
+            transition: border-color 0.2s;
+        }
+
+        .menu-item:hover { border-color: var(--border); }
+
+        .menu-text {
+            font-size: 12px;
+            line-height: 1.5;
+            color: var(--text);
+        }
+
+        .menu-shot-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            padding: 6px 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+            min-height: 44px;
+        }
+
+        .menu-shot-btn:hover { border-color: var(--accent); }
+
+        .menu-shot-btn.on-ichiyama {
+            background: rgba(244,143,177,0.12);
+            border-color: var(--ichiyama);
+        }
+
+        .menu-shot-btn.on-ejima {
+            background: rgba(79,195,247,0.12);
+            border-color: var(--ejima);
+        }
+
+        .shot-icon { font-size: 14px; }
+
+        .shot-label {
+            font-size: 9px;
+            letter-spacing: 1px;
+            color: var(--muted);
+        }
+
+        .menu-shot-btn.on-ichiyama .shot-label { color: var(--ichiyama); }
+        .menu-shot-btn.on-ejima    .shot-label { color: var(--ejima); }
+
+        .menu-progress-wrap {
+            margin-bottom: 36px;
+        }
+
+        .menu-progress-label {
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: var(--muted);
+            margin-bottom: 8px;
+            text-align: right;
+        }
+
+        .menu-progress-bar-bg {
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .menu-progress-bar {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 2px;
+            transition: width 0.3s;
+            width: 0%;
+        }
+
+        .venue-wrap {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 40px;
+        }
+
+        .venue-img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        @media print {
+            body { background: #fff; color: #000; }
+            .actions { display: none; }
+            .event-cell { background: #f9f9f9; border-color: #ddd; }
+            .assignment-cell { background: #f0f0f0; border-color: #ccc; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-date">2025.05.15 FRI</div>
+    <img src="esr-logo.png" alt="ESR ロゴ" class="header-logo" />
+    <h1>ESR 企業パーティー</h1>
+    <div class="header-sub">PHOTO SCHEDULE — 市山 / 江島</div>
+    <div class="header-stats">
+        <div class="stat-item">
+            <div class="stat-label">目標撮影枚数</div>
+            <div class="stat-value">1,200<span class="stat-unit">枚</span></div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <div class="stat-label">前年実績</div>
+            <div class="stat-value">1,049<span class="stat-unit">枚</span></div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-dot" style="background: var(--ichiyama);"></div>
+            <span style="color: var(--ichiyama);">市山</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot" style="background: var(--ejima);"></div>
+            <span style="color: var(--ejima);">江島</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot" style="background: #333; border: 1px dashed #555;"></div>
+            <span style="color: var(--muted);">未入力</span>
+        </div>
+    </div>
+
+    <div class="actions">
+        <button class="btn primary" onclick="window.print()">印刷</button>
+        <button class="btn" onclick="resetAll()">リセット</button>
+    </div>
+
+    <div class="col-headers">
+        <div class="col-header"></div>
+        <div class="col-header">プログラム</div>
+        <div class="col-header ichiyama">市山</div>
+        <div class="col-header ejima">江島</div>
+    </div>
+
+    <div id="timeline"></div>
+
+</div>
+
+<div class="container">
+    <div class="section-divider" style="margin: 8px 0 24px;">
+        <span class="section-label">料理撮影チェックリスト</span>
+    </div>
+    <div class="menu-col-headers">
+        <div></div>
+        <div class="menu-col-h ichiyama">市山</div>
+        <div class="menu-col-h ejima">江島</div>
+    </div>
+    <div class="menu-grid" id="menu-checklist"></div>
+    <div class="menu-progress-wrap">
+        <div class="menu-progress-label">
+            <span id="menu-count">0</span> / <span id="menu-total">0</span> 品 撮影済み
+        </div>
+        <div class="menu-progress-bar-bg">
+            <div class="menu-progress-bar" id="menu-bar"></div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="section-divider" style="margin: 8px 0 24px;">
+        <span class="section-label">会場レイアウト</span>
+    </div>
+    <div class="venue-wrap">
+        <img src="venue-layout.png" alt="会場レイアウト" class="venue-img" />
+    </div>
+</div>
+
+<footer>ESR PARTY 2025 &mdash; SHOOTING SCHEDULE</footer>
+
+<script>
+const schedule = [
+    { time: "15:00", label: "入り",                       section: "準備" },
+    { time: "16:00", label: "",                            editable: true },
+    { time: "17:00", label: "",                            editable: true },
+    { time: "18:00", label: "開場・受付開始",              section: "本番" },
+    { time: "18:30", label: "オープニング・MC登場" },
+    { time: "18:31", label: "会社VTR放映" },
+    { time: "18:36", label: "代表ご挨拶" },
+    { time: "18:47", label: "乾杯のご挨拶" },
+    { time: "18:55", label: "お食事とご歓談" },
+    { time: "19:30", label: "ライブステージ" },
+    { time: "20:00", label: "ステージ転換（お食事）" },
+    { time: "20:05", label: "抽選会" },
+    { time: "20:25", label: "締めのご挨拶" },
+    { time: "20:30", label: "退出",                        section: "終了" },
+];
+
+let state = JSON.parse(localStorage.getItem('esr_state') || '{}');
+
+function save() {
+    localStorage.setItem('esr_state', JSON.stringify(state));
+}
+
+function taskChange(i, person, val) {
+    if (!state[i]) state[i] = { ejima: '', ichiyama: '', note: '' };
+    state[i][person] = val;
+    save();
+}
+
+function noteChange(i, val) {
+    if (!state[i]) state[i] = { ejima: false, ichiyama: false, note: '' };
+    state[i].note = val;
+    save();
+}
+
+function labelChange(i, val) {
+    if (!state[i]) state[i] = { ejima: false, ichiyama: false, note: '' };
+    state[i].label = val;
+    save();
+}
+
+function resetAll() {
+    if (confirm('割り当てとメモをすべてリセットしますか？')) {
+        state = {};
+        save();
+        render();
+    }
+}
+
+function render() {
+    const el = document.getElementById('timeline');
+    let html = '';
+    let lastSection = '';
+
+    schedule.forEach((ev, i) => {
+        const s = state[i] || { ejima: '', ichiyama: '', note: '' };
+
+        if (ev.section && ev.section !== lastSection) {
+            lastSection = ev.section;
+            html += `<div class="section-divider"><span class="section-label">${ev.section}</span></div>`;
+        }
+
+        const eventContent = ev.editable
+            ? `<input class="event-input" type="text" placeholder="内容を入力..." value="${(s.label || '').replace(/"/g, '&quot;')}" oninput="labelChange(${i}, this.value)" />`
+            : `<div class="event-name">${ev.label}</div>`;
+
+        html += `
+        <div class="event-row">
+            <div class="time-cell">${ev.time}</div>
+            <div class="event-cell">${eventContent}</div>
+            <div class="assignment-cell">
+                <textarea class="task-input ichiyama-input" rows="2" placeholder="担当内容を入力..."
+                    oninput="taskChange(${i},'ichiyama',this.value)">${(s.ichiyama || '').replace(/</g,'&lt;')}</textarea>
+            </div>
+            <div class="assignment-cell">
+                <textarea class="task-input ejima-input" rows="2" placeholder="担当内容を入力..."
+                    oninput="taskChange(${i},'ejima',this.value)">${(s.ejima || '').replace(/</g,'&lt;')}</textarea>
+            </div>
+        </div>
+        <div class="note-row">
+            <div></div>
+            <input class="note-input" type="text" placeholder="メモ・撮影指示を入力..."
+                value="${(s.note || '').replace(/"/g, '&quot;')}"
+                oninput="noteChange(${i}, this.value)" />
+        </div>`;
+    });
+
+    el.innerHTML = html;
+}
+
+render();
+
+// ── メニューチェックリスト ──
+const menuItems = [
+    { category: "ASSORTED COCKTAIL SELECTION" },
+    { id: "m1",  name: "グリーンピースのムースと小海老のミントタブレ ういきょうと新玉葱のクロッカン" },
+    { id: "m2",  name: "九州産 黒毛和牛とズッキーニのキッシュ セルベルドカニュ" },
+    { id: "m3",  name: "海老カツのトルティーヤロール コックソース" },
+    { category: "COLD SELECTION" },
+    { id: "m4",  name: "真鯛の炙り 揚げワンタン 落花生" },
+    { id: "m5",  name: "福岡県産みらいサーモンと鮪の洋風手毬寿司 花穂添え" },
+    { id: "m6",  name: "日田山椒香るよだれ鶏" },
+    { id: "m7",  name: "九州産 牛肉のタリアータ 大分椎茸のマリネ ピーカンナッツと白山葵ソース" },
+    { id: "m8",  name: "阿蘇自然豚生ハムとモッツァレラチーズ 福岡県産トマト バジルの香り" },
+    { id: "m9",  name: "桜海老とシェルフィッシュ 九州野菜の冷たい蝶々パスタ" },
+    { id: "m10", name: "各種パン" },
+    { category: "HOT SELECTION" },
+    { id: "m11", name: "肥後あそび豚ベーコンと浅利のクラムチャウダー" },
+    { id: "m12", name: "九州産 鮮魚のアクアパッツァ" },
+    { id: "m13", name: "海老のクリーミーマヨネーズ和え" },
+    { id: "m14", name: "みつせ鶏の油淋鶏 メランジェサラダ添え" },
+    { id: "m15", name: "RCFオリジナル九州産 ビーフカレー＆ライス" },
+    { id: "m16", name: "九州ソーセージとザワークラウト インカポテト" },
+    { id: "m17", name: "海鮮焼きそば" },
+    { id: "m18", name: "九州産 黒毛和牛と博多長茄子のスパイシーラザニア" },
+    { category: "CAVING STATION" },
+    { id: "m19", name: "肥後あそび豚背肉のロースト マッシュポテト 赤ワインとレーズンソース" },
+    { category: "SWEETS" },
+    { id: "m20", name: "福岡県産 あまおうと平飼い卵のショートケーキ" },
+    { id: "m21", name: "マンジャリチョコレートとラズベリーのシュークリーム" },
+    { id: "m22", name: "ヘーゼルナッツと柚子のアントルメ" },
+    { id: "m23", name: "マカロンアソート" },
+    { id: "m24", name: "エキゾチックフルーツとバニラのババ" },
+    { id: "m25", name: "宮崎マンゴープリンとライチのヴェリーヌ マンゴーと文旦のソース" },
+    { id: "m26", name: "塩キャラメルナッツ ミルクチョコレートタルト" },
+    { category: "DRINKS" },
+    { id: "m27", name: "コーヒー・紅茶" },
+];
+
+let menuState = JSON.parse(localStorage.getItem('esr_menu') || '{}');
+
+function saveMenu() {
+    localStorage.setItem('esr_menu', JSON.stringify(menuState));
+}
+
+function toggleMenu(id, person) {
+    if (!menuState[id]) menuState[id] = { ichiyama: false, ejima: false };
+    menuState[id][person] = !menuState[id][person];
+    saveMenu();
+    renderMenu();
+}
+
+function renderMenu() {
+    const el = document.getElementById('menu-checklist');
+    const dishes = menuItems.filter(m => m.id);
+    const total = dishes.length;
+    const checked = dishes.filter(m => {
+        const s = menuState[m.id] || {};
+        return s.ichiyama || s.ejima;
+    }).length;
+
+    let html = '';
+    menuItems.forEach(item => {
+        if (item.category) {
+            html += `<div class="menu-category">${item.category}</div>`;
+        } else {
+            const s = menuState[item.id] || { ichiyama: false, ejima: false };
+            html += `
+            <div class="menu-item">
+                <div class="menu-text">${item.name}</div>
+                <div class="menu-shot-btn ${s.ichiyama ? 'on-ichiyama' : ''}" onclick="toggleMenu('${item.id}','ichiyama')">
+                    <div class="shot-icon">${s.ichiyama ? '📷' : '·'}</div>
+                    <div class="shot-label">${s.ichiyama ? '撮影済' : '未撮影'}</div>
+                </div>
+                <div class="menu-shot-btn ${s.ejima ? 'on-ejima' : ''}" onclick="toggleMenu('${item.id}','ejima')">
+                    <div class="shot-icon">${s.ejima ? '📷' : '·'}</div>
+                    <div class="shot-label">${s.ejima ? '撮影済' : '未撮影'}</div>
+                </div>
+            </div>`;
+        }
+    });
+
+    el.innerHTML = html;
+    document.getElementById('menu-count').textContent = checked;
+    document.getElementById('menu-total').textContent = total;
+    document.getElementById('menu-bar').style.width = (total ? (checked / total * 100) : 0) + '%';
+}
+
+renderMenu();
+
+</script>
+</body>
+</html>
