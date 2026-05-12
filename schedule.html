@@ -671,7 +671,9 @@ const schedule = [
     { time: "20:30", label: "退出",                        section: "終了" },
 ];
 
-let state = JSON.parse(localStorage.getItem('esr_state') || '{}');
+const defaultState = {"state":{"0":{"ejima":false,"ichiyama":false,"note":"最終打ち合わせ"},"1":{"ejima":false,"ichiyama":false,"note":"","label":"空絵・お料理の撮影"}},"menuState":{}};
+
+let state = JSON.parse(localStorage.getItem('esr_state') || 'null') || defaultState.state;
 
 function save() {
     localStorage.setItem('esr_state', JSON.stringify(state));
@@ -788,7 +790,7 @@ const menuItems = [
     { id: "m27", name: "コーヒー・紅茶" },
 ];
 
-let menuState = JSON.parse(localStorage.getItem('esr_menu') || '{}');
+let menuState = JSON.parse(localStorage.getItem('esr_menu') || 'null') || defaultState.menuState;
 
 function saveMenu() {
     localStorage.setItem('esr_menu', JSON.stringify(menuState));
