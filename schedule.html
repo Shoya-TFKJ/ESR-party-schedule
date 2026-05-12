@@ -208,36 +208,34 @@
             letter-spacing: 4px;
         }
 
-        /* イベント行 */
-        .event-row {
-            display: grid;
-            grid-template-columns: 72px 1fr 110px 110px;
-            gap: 6px;
-            margin-bottom: 2px;
-            align-items: stretch;
+        /* イベントブロック */
+        .event-block {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            overflow: hidden;
+        }
+
+        .event-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
         }
 
         .time-cell {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            padding-right: 12px;
             font-size: 12px;
             color: var(--accent);
-            font-weight: 500;
+            font-weight: 600;
             letter-spacing: 1px;
             white-space: nowrap;
-        }
-
-        .event-cell {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 5px;
-            padding: 11px 14px;
+            min-width: 48px;
         }
 
         .event-name {
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 500;
             color: #fff;
         }
@@ -247,69 +245,81 @@
             border: none;
             border-bottom: 1px dashed var(--border);
             color: var(--text);
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 500;
-            width: 100%;
+            flex: 1;
             outline: none;
             padding: 2px 0;
-            transition: border-color 0.2s;
         }
 
         .event-input::placeholder { color: #444; font-weight: 400; }
         .event-input:focus { border-bottom-color: var(--accent); }
 
-        /* 担当セル */
-        .assignment-cell {
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: 5px;
-            padding: 8px 10px;
-            min-height: 48px;
+        /* 担当入力エリア */
+        .event-assignments {
+            padding: 10px 14px;
             display: flex;
-            align-items: center;
+            flex-direction: column;
+            gap: 8px;
         }
 
+        .assignment-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .person-label {
+            font-size: 10px;
+            letter-spacing: 2px;
+            font-weight: 600;
+            min-width: 38px;
+            padding-top: 4px;
+        }
+
+        .person-label.ichiyama { color: var(--ichiyama); }
+        .person-label.ejima    { color: var(--ejima); }
+
         .task-input {
-            background: transparent;
-            border: none;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 4px;
             outline: none;
             width: 100%;
-            font-size: 12px;
+            font-size: 13px;
             line-height: 1.5;
             resize: none;
-            padding: 0;
+            padding: 6px 10px;
+            font-family: inherit;
         }
 
         .task-input.ichiyama-input { color: var(--ichiyama); }
-        .task-input.ichiyama-input::placeholder { color: rgba(244,143,177,0.3); }
+        .task-input.ichiyama-input::placeholder { color: rgba(244,143,177,0.25); }
+        .task-input.ichiyama-input:focus { border-color: var(--ichiyama); }
 
         .task-input.ejima-input { color: var(--ejima); }
-        .task-input.ejima-input::placeholder { color: rgba(79,195,247,0.3); }
+        .task-input.ejima-input::placeholder { color: rgba(79,195,247,0.25); }
+        .task-input.ejima-input:focus { border-color: var(--ejima); }
 
         /* メモ行 */
         .note-row {
-            display: grid;
-            grid-template-columns: 72px 1fr 110px 110px;
-            gap: 6px;
-            margin-bottom: 8px;
+            padding: 0 14px 10px;
         }
 
         .note-input {
-            grid-column: 2 / 5;
             background: transparent;
             border: none;
             border-bottom: 1px solid #222;
-            color: var(--muted);
+            color: #ff8c00;
             font-size: 11px;
-            padding: 4px 8px;
+            padding: 4px 0;
             outline: none;
             width: 100%;
             transition: border-color 0.2s;
         }
 
-        .note-input::placeholder { color: #333; }
+        .note-input::placeholder { color: #444; }
         .note-input:focus { border-bottom-color: #ff8c00; }
-        .note-input { color: #ff8c00; }
 
         footer {
             text-align: center;
@@ -603,13 +613,6 @@
     </div>
     <div id="save-status" class="save-status"></div>
 
-    <div class="col-headers">
-        <div class="col-header"></div>
-        <div class="col-header">プログラム</div>
-        <div class="col-header ichiyama">市山</div>
-        <div class="col-header ejima">江島</div>
-    </div>
-
     <div id="timeline"></div>
 
 </div>
@@ -717,23 +720,28 @@ function render() {
             : `<div class="event-name">${ev.label}</div>`;
 
         html += `
-        <div class="event-row">
-            <div class="time-cell">${ev.time}</div>
-            <div class="event-cell">${eventContent}</div>
-            <div class="assignment-cell">
-                <textarea class="task-input ichiyama-input" rows="2" placeholder="担当内容を入力..."
-                    oninput="taskChange(${i},'ichiyama',this.value)">${(s.ichiyama || '').replace(/</g,'&lt;')}</textarea>
+        <div class="event-block">
+            <div class="event-header">
+                <div class="time-cell">${ev.time}</div>
+                ${eventContent}
             </div>
-            <div class="assignment-cell">
-                <textarea class="task-input ejima-input" rows="2" placeholder="担当内容を入力..."
-                    oninput="taskChange(${i},'ejima',this.value)">${(s.ejima || '').replace(/</g,'&lt;')}</textarea>
+            <div class="event-assignments">
+                <div class="assignment-row">
+                    <span class="person-label ichiyama">市山</span>
+                    <textarea class="task-input ichiyama-input" rows="2" placeholder="担当内容を入力..."
+                        oninput="taskChange(${i},'ichiyama',this.value)">${(s.ichiyama || '').replace(/</g,'&lt;')}</textarea>
+                </div>
+                <div class="assignment-row">
+                    <span class="person-label ejima">江島</span>
+                    <textarea class="task-input ejima-input" rows="2" placeholder="担当内容を入力..."
+                        oninput="taskChange(${i},'ejima',this.value)">${(s.ejima || '').replace(/</g,'&lt;')}</textarea>
+                </div>
             </div>
-        </div>
-        <div class="note-row">
-            <div></div>
-            <input class="note-input" type="text" placeholder="メモ・撮影指示を入力..."
-                value="${(s.note || '').replace(/"/g, '&quot;')}"
-                oninput="noteChange(${i}, this.value)" />
+            <div class="note-row">
+                <input class="note-input" type="text" placeholder="メモ・撮影指示を入力..."
+                    value="${(s.note || '').replace(/"/g, '&quot;')}"
+                    oninput="noteChange(${i}, this.value)" />
+            </div>
         </div>`;
     });
 
